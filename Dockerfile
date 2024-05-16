@@ -1,3 +1,5 @@
+FROM node:v20.13.1
+
 # Set the working directory in the container
 WORKDIR /app
 
