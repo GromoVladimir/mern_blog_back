@@ -6,15 +6,15 @@ import post from "../models/post.js";
 export const like = async (req, res) => {
     try {
         const postId = req.params.id;
-        
+
         PostModel.findOne(
-        {
-            _id: postId,
-        },
+            {
+                _id: postId,
+            },
         ).populate({
             path: 'user',
             select: ['name', 'avatarUrl'],
-          }
+        }
         ).then((post) => {
 
             if (!post.likeUser.some(ids => ids === req.userId)) {
@@ -27,7 +27,7 @@ export const like = async (req, res) => {
 
             post.save();
             const likesCount = post.likesCount;
-            res.json({likesCount});
+            res.json({ likesCount });
         });
 
     } catch (err) {
@@ -41,18 +41,18 @@ export const like = async (req, res) => {
 export const getAll = async (req, res) => {
     try {
         const postId = req.params.id;
-        const comment = await CommentModel.find({post: postId}).populate('post').populate({
+        const comment = await CommentModel.find({ post: postId }).populate('post').populate({
             path: 'user',
             select: ['name', 'avatarUrl'],
-          }).exec()
+        }).exec()
 
         res.json(comment);
 
-    } catch(err) {
+    } catch (err) {
         console.log(err),
-        res.status(500).json({
-            message: 'Failed to find comment',
-        });
+            res.status(500).json({
+                message: 'Failed to find comment',
+            });
     }
 };
 
@@ -63,30 +63,30 @@ export const create = async (req, res) => {
         const currentUser = await UserModel.findById(req.userId);
         const doc = new CommentModel({
             text: req.body.text,
-            user:{
+            user: {
                 _id: currentUser._id,
                 name: currentUser.name,
                 avatarUrl: currentUser.avatarUrl,
             },
             post: postId,
         });
-    
+
         const comment = await doc.save();
 
         const currentComment = {
-                text: req.body.text,
-                user:{
-                    _id: currentUser._id,
-                    name: currentUser.name,
-                    avatarUrl: currentUser.avatarUrl,
-                },
-                post: postId,
-                commentsCount: currentPost.commentsCount + 1,
+            text: req.body.text,
+            user: {
+                _id: currentUser._id,
+                name: currentUser.name,
+                avatarUrl: currentUser.avatarUrl,
+            },
+            post: postId,
+            commentsCount: currentPost.commentsCount + 1,
         };
 
         currentPost.commentsCount = currentPost.commentsCount + 1;
         currentPost.save();
-    
+
         res.json(currentComment);
     } catch (err) {
         console.log(err);
@@ -99,14 +99,14 @@ export const create = async (req, res) => {
 export const update = async (req, res) => {
     try {
         const commentId = req.params.id;
-        
+
         await CommentModel.updateOne({
             _id: commentId,
         },
-        {
-            text: req.body.text,
-            user: req.userId,
-        },
+            {
+                text: req.body.text,
+                user: req.userId,
+            },
         );
 
         res.json({
@@ -123,7 +123,12 @@ export const update = async (req, res) => {
 export const remove = async (req, res) => {
     try {
         const commentId = req.params.id;
-        
+
+        const currentComment = await CommentModel.find({_id: commentId});
+        const postId = currentComment[0].post._id;
+        const currentPost = await PostModel.findById(postId);
+
+
         CommentModel.findOneAndDelete({
             _id: commentId,
         }).then((comment) => {
@@ -137,6 +142,9 @@ export const remove = async (req, res) => {
                 success: true,
             });
         });
+
+        currentPost.commentsCount = currentPost.commentsCount - 1;
+        currentPost.save();
 
     } catch (err) {
         console.log(err);
@@ -155,4 +163,4 @@ export const getCommentByUser = async (req, res) => {
         console.error(err);
         return [];
     }
-  };
+};

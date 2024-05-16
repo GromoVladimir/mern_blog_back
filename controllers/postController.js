@@ -54,31 +54,39 @@ export const getAllPostUser = async (req, res) => {
 export const getOne = async (req, res) => {
     try {
         const postId = req.params.id;
+
+        const currentPost = await PostModel.findById(postId)
         
-        PostModel.findOneAndUpdate(
-        {
-            _id: postId,
-        }, 
-        {
-            $inc: {viewsCount: 1},
-        }, 
-        {
-            returnDocument: 'after',
-        },
-        ).populate({
-            path: 'user',
-            select: ['name', 'avatarUrl', 'status'],
-          }
-        ).then((post) => {
-
-            if (!post) {
-                return res.status(404).json({
-                    message: 'Post not found',
-                });
+        if (currentPost?._id == postId) {
+            PostModel.findOneAndUpdate(
+            {
+                _id: postId,
+            }, 
+            {
+                $inc: {viewsCount: 1},
+            }, 
+            {
+                returnDocument: 'after',
+            },
+            ).populate({
+                path: 'user',
+                select: ['name', 'avatarUrl', 'status'],
             }
+            ).then((post) => {
 
-            res.json(post);
-        });
+                if (!post) {
+                    return res.status(404).json({
+                        message: 'Post not found',
+                    });
+                }
+
+                res.json(post);
+            });
+        } else {
+            return res.status(404).json({
+                message: 'Post not found',
+            });
+        }
 
     } catch (err) {
         console.log(err);
