@@ -7,8 +7,8 @@ import {registerValidator, loginValidator, postCreateValidator, commentValidator
 import { userController, postController, reactionController } from "./controllers/index.js";
 import { checkAuth, handleValidatorErrors } from "./utils/index.js";
 
-mongoose.connect('mongodb+srv://admin:admin@cluster0.w8zhdc7.mongodb.net/blog?retryWrites=true&w=majority',
-).then(() => console.log('DB Connect'))
+mongoose.connect(process.env.MONGODB_URI)
+.then(() => console.log('DB Connect'))
 .catch((err) => console.log('DB Error', err));
 
 const app = express();
@@ -65,7 +65,7 @@ app.patch('/comments/:id', checkAuth, commentValidator, handleValidatorErrors, r
 app.delete('/comments/:id', checkAuth, reactionController.remove);
 app.patch('/posts/:id/like', checkAuth, reactionController.like);
 
-app.listen(4444, (err) => {
+app.listen(process.env.PORT || 4444, (err) => {
     if (err){
         console.log(err);
     }
